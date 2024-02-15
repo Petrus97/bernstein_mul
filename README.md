@@ -1,0 +1,1 @@
+# R. Bernstein's algorithm for integer constant multiplication
