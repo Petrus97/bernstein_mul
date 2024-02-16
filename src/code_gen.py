@@ -113,6 +113,8 @@ class CodeGen:
                 self.code.append(f"\t{target_sym} = 0 - {source_sym};")
 
     def gen_code(self):
+        print("GENERATED CODE:")
+        print("---------------")
         match self.lang:
             case Lang.PYTHON:
                 self.code.append(f"\treturn {self.temporaries_list[self.target]}\n")
@@ -133,3 +135,4 @@ class CodeGen:
                 # write to file
                 with open(f"./generated/c/multiply.c", "w") as f:
                     f.write("\n".join(self.code))
+        print("---------------")

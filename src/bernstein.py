@@ -150,12 +150,12 @@ def main():
     )
     args = parser.parse_args()
     constant = args.c
-    print(constant)
+    # print(constant)
     code_gen = CodeGen(target=constant, lang=Lang.C)
     multiply(constant, code_gen)
     print("Number of operations:", num_op)
     code_gen.gen_code()
-    print(code_gen.temporaries_list)
+    # print(code_gen.temporaries_list)
 
 
 if __name__ == "__main__":
