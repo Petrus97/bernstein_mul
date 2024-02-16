@@ -6,8 +6,10 @@ from hash_table import HashTable
 from constants import MulOp, COSTS, NEG_COST, SHIFT_COST, MULT_COST
 from node import Node
 from utils import is_odd, make_odd
+from code_gen import CodeGen, Lang
 
 hash_table = HashTable()
+code_gen = None
 
 
 def estimate_cost(target: int) -> int:
@@ -15,49 +17,65 @@ def estimate_cost(target: int) -> int:
     return MULT_COST
 
 
-def emit_code(node: Node) -> int:
+num_op = 0
+
+
+def emit_code(node: Node, code_gen: CodeGen) -> int:
+    global num_op
     source = -1
     target = node.value
     match node.op:
         case MulOp.IDENTITY:
             pass
         case MulOp.NEGATE:
-            source = emit_code(node.parent)
+            source = emit_code(node.parent, code_gen=code_gen)
             print(f"{target} = 0 - {source}; // NEGATE")
+            code_gen.gen_negate(target, source)
         case MulOp.SHIFT_ADD:
-            source = emit_code(node.parent)
-            emit_shift(target - 1, source)
+            source = emit_code(node.parent, code_gen=code_gen)
+            emit_shift(target - 1, source, code_gen=code_gen)
             print(f"{target} = {target - 1} + 1; // SHIFT_ADD")
+            code_gen.gen_add(target, target - 1, 1)
         case MulOp.SHIFT_SUB:
-            source = emit_code(node.parent)
-            emit_shift(target + 1, source)
+            source = emit_code(node.parent, code_gen=code_gen)
+            emit_shift(target + 1, source, code_gen=code_gen)
             print(f"{target} = {target + 1} - 1; // SHIFT_SUB")
+            code_gen.gen_sub(target, target + 1, 1)
         case MulOp.SHIFT_REV:
-            source = emit_code(node.parent)
-            emit_shift(1 - target, source)
+            source = emit_code(node.parent, code_gen=code_gen)
+            emit_shift(1 - target, source, code_gen=code_gen)
             print(f"{target} = 1 - {1 - target}; // SHIFT_REV")
+            code_gen.gen_sub(target, 1, 1 - target)
         case MulOp.FACTOR_ADD:
-            source = emit_code(node.parent)
-            emit_shift(target - source, source)
+            source = emit_code(node.parent, code_gen=code_gen)
+            emit_shift(target - source, source, code_gen=code_gen)
             print(f"{target} = {target - source} + {source}; // FACTOR_ADD")
+            code_gen.gen_add(target, target - source, source)
         case MulOp.FACTOR_SUB:
-            source = emit_code(node.parent)
-            emit_shift(target + source, source)
+            source = emit_code(node.parent, code_gen=code_gen)
+            emit_shift(target + source, source, code_gen=code_gen)
             print(f"{target} = {target + source} - {source}; // FACTOR_SUB")
+            code_gen.gen_sub(target, target + source, source)
         case MulOp.FACTOR_REV:
-            source = emit_code(node.parent)
-            emit_shift(source - target, source)
+            source = emit_code(node.parent, code_gen=code_gen)
+            emit_shift(source - target, source, code_gen=code_gen)
             print(f"{target} = {source} - {source-target}; // FACTOR_REV")
+            code_gen.gen_sub(source, source - target)
+    if node.op != MulOp.IDENTITY:
+        num_op += 1
     return target
 
 
-def emit_shift(target: int, source: int):
+def emit_shift(target: int, source: int, code_gen: CodeGen):
+    global num_op
     temp = source
     i = 0
     while target != temp:
         temp <<= 1
         i += 1
     print(f"{target} = {source} << {i}; // SHIFT {i} times")
+    code_gen.gen_shift(target, source, i)
+    num_op += 1
 
 
 def do_try(factor: int, node: Node, op: MulOp):
@@ -104,12 +122,12 @@ def find_sequence(c: int, limit: int) -> Node:
     return node
 
 
-def multiply(target: int):
+def multiply(target: int, code_gen: CodeGen):
     multiply_cost = estimate_cost(target)
     if is_odd(target):  # 16a
         result: Node = find_sequence(target, multiply_cost)
         if (result.parent is not None) and (result.cost < multiply_cost):
-            emit_code(result)
+            emit_code(result, code_gen)
         else:
             print(
                 f"Cost {result.cost} is higher than MUL instruction cost {multiply_cost}"
@@ -117,8 +135,8 @@ def multiply(target: int):
     else:  # 16b
         result: Node = find_sequence(make_odd(target), multiply_cost - SHIFT_COST)
         if (result.parent is not None) and (result.cost + SHIFT_COST < multiply_cost):
-            source = emit_code(result)
-            emit_shift(target, source)
+            source = emit_code(result, code_gen)
+            emit_shift(target, source, code_gen)
 
 
 def main():
@@ -133,7 +151,11 @@ def main():
     args = parser.parse_args()
     constant = args.c
     print(constant)
-    multiply(constant)
+    code_gen = CodeGen(target=constant, lang=Lang.C)
+    multiply(constant, code_gen)
+    print("Number of operations:", num_op)
+    code_gen.gen_code()
+    print(code_gen.temporaries_list)
 
 
 if __name__ == "__main__":
