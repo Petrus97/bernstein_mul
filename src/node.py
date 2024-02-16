@@ -1,5 +1,6 @@
 from constants import MulOp
 
+
 class Node:
     def __init__(
         self,

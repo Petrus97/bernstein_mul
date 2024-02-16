@@ -1,6 +1,7 @@
 from node import Node
 from constants import SHIFT_COST, NEG_COST, MulOp
 
+
 class HashTable:
     def __init__(self, size: int = 31):
         self.size = size
@@ -8,10 +9,10 @@ class HashTable:
         self.__init_table__()
 
     def lookup(self, c: int):
-        '''
+        """
         Lookup a node in the hash table.
         If the node is not found, create a new node and return it.
-        '''
+        """
         index = abs(c) % self.size
         node = self.table[index]
         if node is None:
@@ -40,9 +41,9 @@ class HashTable:
             print(strstr)
 
     def __init_table__(self):
-        '''
+        """
         Initialize the hash table with the nodes for 1 and -1
-        '''
+        """
         node1 = self.lookup(1)
         node1.parent = node1
         node1.op = MulOp.IDENTITY

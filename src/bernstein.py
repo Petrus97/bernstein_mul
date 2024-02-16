@@ -9,9 +9,11 @@ from utils import is_odd, make_odd
 
 hash_table = HashTable()
 
+
 def estimate_cost(target: int) -> int:
     # FIXME: Implement a better cost estimation
     return MULT_COST
+
 
 def emit_code(node: Node) -> int:
     source = -1
@@ -69,13 +71,13 @@ def do_try(factor: int, node: Node, op: MulOp):
 
 
 def find_sequence(c: int, limit: int) -> Node:
-    '''
+    """
     Factoring in the form 2^i ± 1.
-    '''
+    """
     node = hash_table.lookup(c)
     if (node.parent is None) and (node.cost < limit):
         node.cost = limit
-        if c > 0: 
+        if c > 0:
             # 9a positive case
             power = 4
             edge = c >> 1
@@ -87,7 +89,7 @@ def find_sequence(c: int, limit: int) -> Node:
                 power <<= 1
             do_try(make_odd(c - 1), node, MulOp.SHIFT_ADD)
             do_try(make_odd(c + 1), node, MulOp.SHIFT_SUB)
-        else:  
+        else:
             # 9b negative case
             power = 4
             edge = (-c) >> 1
@@ -101,6 +103,7 @@ def find_sequence(c: int, limit: int) -> Node:
             do_try(make_odd(c + 1), node, MulOp.SHIFT_SUB)
     return node
 
+
 def multiply(target: int):
     multiply_cost = estimate_cost(target)
     if is_odd(target):  # 16a
@@ -108,7 +111,9 @@ def multiply(target: int):
         if (result.parent is not None) and (result.cost < multiply_cost):
             emit_code(result)
         else:
-            print(f"Cost {result.cost} is higher than MUL instruction cost {multiply_cost}")
+            print(
+                f"Cost {result.cost} is higher than MUL instruction cost {multiply_cost}"
+            )
     else:  # 16b
         result: Node = find_sequence(make_odd(target), multiply_cost - SHIFT_COST)
         if (result.parent is not None) and (result.cost + SHIFT_COST < multiply_cost):
@@ -122,11 +127,14 @@ def main():
     parser = ap.ArgumentParser(
         description="R. Bernstein's algorithm for integer constant multiplication"
     )
-    parser.add_argument("-c", type=int, help="The constant to multiply. Default is 2.", default=2)
+    parser.add_argument(
+        "-c", type=int, help="The constant to multiply. Default is 2.", default=2
+    )
     args = parser.parse_args()
     constant = args.c
     print(constant)
     multiply(constant)
+
 
 if __name__ == "__main__":
     main()
