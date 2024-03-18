@@ -60,7 +60,7 @@ def emit_code(node: Node, code_gen: CodeGen) -> int:
             source = emit_code(node.parent, code_gen=code_gen)
             emit_shift(source - target, source, code_gen=code_gen)
             print(f"{target} = {source} - {source-target}; // FACTOR_REV")
-            code_gen.gen_sub(source, source - target)
+            code_gen.gen_sub(target, source, source - target)
     if node.op != MulOp.IDENTITY:
         num_op += 1
     return target
@@ -113,9 +113,9 @@ def find_sequence(c: int, limit: int) -> Node:
             edge = (-c) >> 1
             while power < edge:
                 if c % (1 - power) == 0:
-                    do_try(c / (1 - power), node, MulOp.FACTOR_REV)
+                    do_try(int(c / (1 - power)), node, MulOp.FACTOR_REV)
                 if c % (power + 1) == 0:
-                    do_try(c / (power + 1), node, MulOp.FACTOR_ADD)
+                    do_try(int(c / (power + 1)), node, MulOp.FACTOR_ADD)
                 power <<= 1
             do_try(make_odd(1 - c), node, MulOp.SHIFT_REV)
             do_try(make_odd(c + 1), node, MulOp.SHIFT_SUB)
@@ -150,6 +150,8 @@ def main():
     )
     args = parser.parse_args()
     constant = args.c
+    if(constant == 0 or constant == 1):
+        return
     # print(constant)
     code_gen = CodeGen(target=constant, lang=Lang.C)
     multiply(constant, code_gen)

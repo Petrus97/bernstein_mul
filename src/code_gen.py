@@ -11,6 +11,7 @@ class CodeGen:
     def __init__(self, target: int, lang: Lang = Lang.PYTHON):
         self.code: list[str] = []
         self.target = target
+        self.target_name = str(self.target) if self.target > 0 else f"n{abs(self.target)}"
         self.lang = lang
         self.temporaries_list: dict[int, str] = {}
         self.counter = 0
@@ -23,13 +24,13 @@ class CodeGen:
                 self.code.append(
                     f"# Multiply by {self.target} using the fewest operations"
                 )
-                self.code.append(f"def multiply({self.input_symbol}: int):")
+                self.code.append(f"def multiply_{self.target_name}({self.input_symbol}: int):")
 
             case Lang.C:
                 self.code.append(
                     f"// Multiply by {self.target} using the fewest operations"
                 )
-                self.code.append(f"int multiply(int {self.input_symbol})")
+                self.code.append(f"int multiply_{self.target_name}(int {self.input_symbol})")
                 self.code.append("{")
 
     def __check_src_target__(self, target: int, source: int) -> (str, str): # type: ignore
@@ -125,7 +126,7 @@ class CodeGen:
         match self.lang:
             case Lang.PYTHON:
                 print("\n".join(self.code))
-                with open(f"./generated/python/multiply.py", "w") as f:
+                with open(f"./generated/python/multiply_{self.target_name}.py", "w") as f:
                     f.write("\n".join(self.code))
 
             case Lang.C:
@@ -133,6 +134,6 @@ class CodeGen:
                 self.code.insert(3, "\tint " + ", ".join(self.temporaries_list.values()) + ";")
                 print("\n".join(self.code))
                 # write to file
-                with open(f"./generated/c/multiply.c", "w") as f:
+                with open(f"./generated/c/multiply_{self.target_name}.c", "w") as f:
                     f.write("\n".join(self.code))
         print("---------------")
