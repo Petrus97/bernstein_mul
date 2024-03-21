@@ -18,6 +18,12 @@ class CodeGen:
         self.input_symbol = "n"
         self.__init_by_lang__()
 
+    def reset(self):
+        self.code = []
+        self.temporaries_list = {}
+        self.counter = 0
+        self.__init_by_lang__()
+
     def __init_by_lang__(self):
         match self.lang:
             case Lang.PYTHON:
@@ -30,7 +36,7 @@ class CodeGen:
                 self.code.append(
                     f"// Multiply by {self.target} using the fewest operations"
                 )
-                self.code.append(f"int multiply_{self.target_name}(int {self.input_symbol})")
+                self.code.append(f"int16_t multiply_{self.target_name}(const int8_t {self.input_symbol})")
                 self.code.append("{")
 
     def __check_src_target__(self, target: int, source: int) -> (str, str): # type: ignore
@@ -116,6 +122,15 @@ class CodeGen:
     def gen_code(self):
         print("GENERATED CODE:")
         print("---------------")
+        from os.path import exists
+        if not exists("./generated/c/multiply.h"):
+            with open("./generated/c/multiply.h", "w") as f:
+                f.write("#ifndef MULTIPLY_H\n")
+                f.write("#define MULTIPLY_H\n\n")
+                f.write("#include <stdint.h>\n\n")
+        if not exists("./generated/c/multiply.c"):
+            with open("./generated/c/multiply.c", "w") as f:
+                f.write("#include \"multiply.h\"\n\n")
         match self.lang:
             case Lang.PYTHON:
                 self.code.append(f"\treturn {self.temporaries_list[self.target]}\n")
@@ -134,6 +149,8 @@ class CodeGen:
                 self.code.insert(3, "\tint " + ", ".join(self.temporaries_list.values()) + ";")
                 print("\n".join(self.code))
                 # write to file
-                with open(f"./generated/c/multiply_{self.target_name}.c", "w") as f:
+                with open(f"./generated/c/multiply.c", "a") as f:
                     f.write("\n".join(self.code))
+                with open(f"./generated/c/multiply.h", "a") as f:
+                    f.write(f"int16_t multiply_{self.target_name}(const int8_t {self.input_symbol}) __attribute__((noinline));\n")
         print("---------------")

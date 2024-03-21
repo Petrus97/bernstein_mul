@@ -1,3 +1,12 @@
 __pycache__
 .vscode
-generated
+# Ignore content of generated
+generated/*
+# Don't ignore the generated C directory itself
+!generated/c
+# Ignore all content of the generated C directory
+generated/c/*
+# Don't ignore the generated C files
+!generated/c/multiply.c
+!generated/c/multiply.h
+

@@ -150,14 +150,31 @@ def main():
     )
     args = parser.parse_args()
     constant = args.c
+    # code_gen = CodeGen(target=constant, lang=Lang.C)
+    # multiply(constant, code_gen)
+    # print("Number of operations:", num_op)
+    # code_gen.gen_code()
+    # #######
+    
+    int8_numbers = range(-128, 128)
     if(constant == 0 or constant == 1):
         return
     # print(constant)
-    code_gen = CodeGen(target=constant, lang=Lang.C)
-    multiply(constant, code_gen)
-    print("Number of operations:", num_op)
-    code_gen.gen_code()
+    for i in int8_numbers:
+        if i == 0 or i == 1:
+            continue
+        code_gen = CodeGen(target=i, lang=Lang.C)
+        multiply(i, code_gen)
+        # print("Number of operations:", num_op)
+        # num_op = 0
+        code_gen.gen_code()
+        code_gen.reset()
+    with open("generated/c/multiply.h", "a") as f:
+        f.write("\n")
+        f.write(f"#endif\n")
+        f.write("\n")
     # print(code_gen.temporaries_list)
+    
 
 
 if __name__ == "__main__":
