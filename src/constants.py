@@ -6,7 +6,7 @@ ADD_COST = 1
 SUB_COST = 1
 NEG_COST = 1
 SHIFT_COST = 1
-MULT_COST = 7
+MULT_COST = 30 # same as cortex M0 small multiplier
 
 
 class MulOp(Enum):

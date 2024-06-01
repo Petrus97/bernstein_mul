@@ -137,6 +137,7 @@ def multiply(target: int, code_gen: CodeGen):
         if (result.parent is not None) and (result.cost + SHIFT_COST < multiply_cost):
             source = emit_code(result, code_gen)
             emit_shift(target, source, code_gen)
+    return (result.cost, (result.cost < multiply_cost) or (result.cost + SHIFT_COST < multiply_cost))
 
 
 def main():
@@ -154,9 +155,12 @@ def main():
         return
     # print(constant)
     code_gen = CodeGen(target=constant, lang=Lang.C)
-    multiply(constant, code_gen)
+    cost, can_generate = multiply(constant, code_gen)
+    # hash_table.print_table()
     print("Number of operations:", num_op)
-    code_gen.gen_code()
+    # print(f"Cost: {cost} - Can generate code: {can_generate}")
+    if can_generate:
+        code_gen.gen_code()
     # print(code_gen.temporaries_list)
 
 
